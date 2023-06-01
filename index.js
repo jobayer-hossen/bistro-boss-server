@@ -24,6 +24,23 @@ const verifyJWT = (req,res,next)=>{
   })
 }
 
+// const verifyJWT = (req, res, next) => {
+//   const authorization = req.headers.authorization;
+//   if (!authorization) {
+//     return res.status(401).send({ error: true, message: 'unauthorized access' });
+//   }
+//   // bearer token
+//   const token = authorization.split(' ')[1];
+
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+//     if (err) {
+//       return res.status(401).send({ error: true, message: 'unauthorized access' })
+//     }
+//     req.decoded = decoded;
+//     next();
+//   })
+// }
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_pass}@cluster0.hxrsyqo.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -53,8 +70,8 @@ async function run() {
       res.send({token});
     })
 
-    // verify
-    const verifyAdmin = async(req,res,next)=>{
+     // Warning: use verifyJWT before using verifyAdmin
+     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -128,6 +145,12 @@ async function run() {
     app.post('/menu', verifyJWT,verifyAdmin, async(req,res)=>{
       const newItem = req.body;
       const result  = await menuCollection.insertOne(newItem);
+      res.send(result);
+    });
+    app.delete('/menu/:id', verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id) }
+      const result = await menuCollection.deleteOne(query);
       res.send(result);
     })
     app.get('/review' ,  async(req,res)=>{
