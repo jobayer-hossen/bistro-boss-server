@@ -70,16 +70,34 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
-      const email =  req.params.email;
-      if(req.decoded.email !== email){
-        res.send({admin : false});
-      }
-      const query = {email:email};
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      // if (req.decoded.email !== email) {
+      //   res.send({ admin: false })
+      // }
+
+      const query = { email: email }
       const user = await userCollection.findOne(query);
-      const result = {admin : user?.role === 'admin'};
+      const result = { admin: user?.role === 'admin' }
       res.send(result);
     })
+
+
+
+
+
+    // app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
+    //   const email =  req.params.email;
+    //   // if(req.decoded.email !== email){
+    //   //   res.send({admin : false});
+    //   // }
+    //   const query = {email:email};
+    //   const user = await userCollection.findOne(query);
+    //   const result = {admin : user?.role === 'admin'};
+    //   res.send(result);
+    // });
+
     app.post('/users' , async(req,res)=>{
       const user = req.body;
       const query = {email: user.email};
@@ -106,6 +124,11 @@ async function run() {
     app.get('/menu' ,  async(req,res)=>{
         const result = await menuCollection.find().toArray();
         res.send(result);
+    });
+    app.post('/menu', verifyJWT,verifyAdmin, async(req,res)=>{
+      const newItem = req.body;
+      const result  = await menuCollection.insertOne(newItem);
+      res.send(result);
     })
     app.get('/review' ,  async(req,res)=>{
         const result = await reviewCollection.find().toArray();
