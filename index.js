@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_KEY)
 const port = process.env.PORT || 7000;
 
 // middleware
@@ -75,7 +76,7 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      if (user?.role !== 'admin') {
+      if (user?.role === 'admin') {
         return res.status(403).send({ error: true, message: 'forbidden message' });
       }
       next();
@@ -89,7 +90,6 @@ async function run() {
 
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
-
       // if (req.decoded.email !== email) {
       //   res.send({ admin: false })
       // }
@@ -187,6 +187,19 @@ async function run() {
     })
 
 
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
 
 
 
